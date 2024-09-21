@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { useState } from 'react'
@@ -92,6 +93,10 @@ const Home: NextPage = () => {
             </div>
           </div>
         )}
+
+        <Link href="/links" className="mt-8">
+          <Button>View All Links</Button>
+        </Link>
       </main>
     </div>
   )
