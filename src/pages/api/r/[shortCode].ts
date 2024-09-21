@@ -16,8 +16,6 @@ export default async function handler(
       where: { shortCode: shortCode },
     });
 
-    console.log("Found link:", link); // Log the found link
-
     if (!link) {
       return res.status(404).json({ message: "Link not found" });
     }
@@ -31,7 +29,17 @@ export default async function handler(
       },
     });
 
-    console.log("Redirecting to:", link.originalUrl); // Log the URL we're redirecting to
+    // Log visit
+    await prisma.visitLog.create({
+      data: {
+        linkId: link.id,
+        userAgent: req.headers["user-agent"] || null,
+        ipAddress:
+          req.headers["x-forwarded-for"]?.toString() ||
+          req.socket.remoteAddress ||
+          null,
+      },
+    });
 
     // Redirect to the original URL
     res.redirect(301, link.originalUrl);

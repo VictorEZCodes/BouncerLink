@@ -4,9 +4,16 @@ import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+type Analytics = {
+  totalVisits: number;
+  lastVisited: string | null;
+  recentVisits: { timestamp: string; userAgent: string | null }[];
+};
+
 const Home: NextPage = () => {
   const [url, setUrl] = useState('')
   const [shortUrl, setShortUrl] = useState('')
+  const [analytics, setAnalytics] = useState<Analytics | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,6 +24,23 @@ const Home: NextPage = () => {
     })
     const data = await response.json()
     setShortUrl(data.shortUrl)
+    setAnalytics(null)
+  }
+
+  const fetchAnalytics = async () => {
+    if (!shortUrl) return;
+    const shortCode = shortUrl.split('/').pop();
+    try {
+      const response = await fetch(`/api/analytics/${shortCode}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics');
+      }
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      setAnalytics(null);
+    }
   }
 
   return (
@@ -44,9 +68,28 @@ const Home: NextPage = () => {
         </form>
 
         {shortUrl && (
-          <div className="mt-8">
-            <p>Your shortened URL:</p>
-            <a href={shortUrl} className="text-blue-600 hover:underline">{shortUrl}</a>
+          <div className="mt-8 flex flex-col items-center">
+            <p className="mb-2">Your shortened URL:</p>
+            <a href={shortUrl} className="text-blue-600 hover:underline mb-4">{shortUrl}</a>
+            <Button onClick={fetchAnalytics} className="w-full max-w-md">View Analytics</Button>
+          </div>
+        )}
+
+        {analytics && (
+          <div className="mt-8 w-full max-w-md">
+            <h2 className="text-2xl font-bold mb-4 text-black">Analytics</h2>
+            <div className="bg-gray-100 p-4 rounded-lg text-black">
+              <p className="mb-2"><strong>Total Visits:</strong> {analytics.totalVisits}</p>
+              <p className="mb-4"><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
+              <h3 className="text-xl font-bold mb-2">Recent Visits</h3>
+              <ul className="list-disc pl-5">
+                {analytics.recentVisits.map((visit, index) => (
+                  <li key={index} className="mb-1">
+                    {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
       </main>
