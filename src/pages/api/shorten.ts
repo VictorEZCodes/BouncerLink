@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./auth/[...nextauth]";
 import prisma from "../../lib/prisma";
 import { nanoid } from "nanoid";
 
@@ -7,7 +8,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const session = await getSession({ req });
+  const session = await getServerSession(req, res, authOptions);
   if (!session) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -16,7 +17,7 @@ export default async function handler(
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { url } = req.body;
+  const { url, expiresAt } = req.body;
 
   if (!url) {
     return res.status(400).json({ message: "URL is required" });
@@ -30,12 +31,16 @@ export default async function handler(
         originalUrl: url,
         shortCode: shortCode,
         userId: session.user.id,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
       },
     });
+
+    console.log("New link created:", newLink); // Add this line
 
     return res.status(200).json({
       shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/r/${shortCode}`,
       shortCode,
+      expiresAt: newLink.expiresAt,
     });
   } catch (error) {
     console.error("Error creating short link:", error);

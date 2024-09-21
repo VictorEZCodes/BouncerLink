@@ -20,6 +20,11 @@ export default async function handler(
       return res.status(404).json({ message: "Link not found" });
     }
 
+    // Check if the link has expired
+    if (link.expiresAt && new Date() > new Date(link.expiresAt)) {
+      return res.status(410).json({ message: "Link has expired" });
+    }
+
     // Update visit count and last visited time
     await prisma.link.update({
       where: { id: link.id },
@@ -42,7 +47,7 @@ export default async function handler(
     });
 
     // Redirect to the original URL
-    res.redirect(301, link.originalUrl);
+    res.redirect(301, link.url);
   } catch (error) {
     console.error("Error redirecting:", error);
     res.status(500).json({ message: "Error redirecting to original URL" });

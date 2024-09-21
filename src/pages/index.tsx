@@ -16,6 +16,7 @@ type Analytics = {
 const Home: NextPage = () => {
   const { data: session } = useSession()
   const [url, setUrl] = useState('')
+  const [expiresAt, setExpiresAt] = useState('')
   const [shortUrl, setShortUrl] = useState('')
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
 
@@ -24,7 +25,8 @@ const Home: NextPage = () => {
     const response = await fetch('/api/shorten', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, expiresAt: expiresAt || null }),
+      credentials: 'include',
     })
     const data = await response.json()
     setShortUrl(data.shortUrl)
@@ -75,6 +77,12 @@ const Home: NextPage = () => {
                     required
                     className="bg-gray-700 border-gray-600 text-white"
                   />
+                  <Input
+                    type="datetime-local"
+                    value={expiresAt}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
                   <Button type="submit" className="w-full">Shorten URL</Button>
                 </form>
               </CardContent>
@@ -85,7 +93,7 @@ const Home: NextPage = () => {
             </Card>
 
             {shortUrl && (
-              <Card className="mt-8 bg-gray-800 border-gray-700">
+              <Card className="mt-8 bg-gray-800 border-gray-700 text-white">
                 <CardHeader>
                   <CardTitle>Your Shortened URL</CardTitle>
                 </CardHeader>
@@ -99,7 +107,7 @@ const Home: NextPage = () => {
             )}
 
             {analytics && (
-              <Card className="mt-8 bg-gray-800 border-gray-700">
+              <Card className="mt-8 bg-gray-800 border-gray-700 text-white">
                 <CardHeader>
                   <CardTitle>Analytics</CardTitle>
                 </CardHeader>

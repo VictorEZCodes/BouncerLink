@@ -1,30 +1,46 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./auth/[...nextauth]";
 import prisma from "../../lib/prisma";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ message: "Method not allowed" });
+  const session = await getServerSession(req, res, authOptions);
+
+  if (!session) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
-  try {
-    const links = await prisma.link.findMany({
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        shortCode: true,
-        originalUrl: true,
-        visits: true,
-        createdAt: true,
-        lastVisitedAt: true,
-      },
-    });
+  if (req.method === "GET") {
+    try {
+      const links = await prisma.link.findMany({
+        where: {
+          userId: session.user.id,
+        },
+        select: {
+          id: true,
+          shortCode: true,
+          url: true,
+          originalUrl: true,
+          visits: true,
+          createdAt: true,
+          lastVisitedAt: true,
+          expiresAt: true, // Make sure this line is included
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
 
-    res.status(200).json(links);
-  } catch (error) {
-    console.error("Error fetching links:", error);
-    res.status(500).json({ message: "Error fetching links" });
+      return res.status(200).json(links);
+    } catch (error) {
+      console.error("Error fetching links:", error);
+      return res.status(500).json({ error: "Error fetching links" });
+    }
+  } else {
+    res.setHeader("Allow", ["GET"]);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

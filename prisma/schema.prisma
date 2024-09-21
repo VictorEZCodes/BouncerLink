@@ -22,13 +22,14 @@ model User {
 model Link {
   id            String    @id @default(cuid())
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now())
-  url           String    @default("https://example.com")
-  originalUrl   String    // Keep this field for compatibility with existing data
+  updatedAt     DateTime  @updatedAt
+  url           String
+  originalUrl   String
   shortCode     String    @unique
   visits        Int       @default(0)
   lastVisitedAt DateTime?
-  userId        String?   // Make this optional
+  expiresAt     DateTime?
+  userId        String?
   user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   visitLogs     VisitLog[]
 }
