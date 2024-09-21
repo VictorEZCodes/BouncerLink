@@ -1,9 +1,11 @@
-import Link from 'next/link'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { useState } from 'react'
+import { useSession, signIn, signOut } from "next-auth/react"
+import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 
 type Analytics = {
   totalVisits: number;
@@ -12,6 +14,7 @@ type Analytics = {
 };
 
 const Home: NextPage = () => {
+  const { data: session } = useSession()
   const [url, setUrl] = useState('')
   const [shortUrl, setShortUrl] = useState('')
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
@@ -45,58 +48,96 @@ const Home: NextPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-2">
+    <div className="min-h-screen bg-gray-900 text-white">
       <Head>
         <title>BouncerLink</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-6xl font-bold mb-8">
-          Welcome to <span className="text-blue-600">BouncerLink</span>
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-5xl font-bold text-center mb-12">
+          Welcome to <span className="text-blue-400">BouncerLink</span>
         </h1>
 
-        <form onSubmit={handleSubmit} className="w-full max-w-md">
-          <Input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Enter your URL here"
-            required
-            className="mb-4"
-          />
-          <Button type="submit" className="w-full">Shorten URL</Button>
-        </form>
+        {session ? (
+          <div className="max-w-2xl mx-auto">
+            <Card className="bg-gray-800 border-gray-700 text-white">
+              <CardHeader>
+                <CardTitle>Create a Short Link</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Input
+                    type="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Enter your URL here"
+                    required
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                  <Button type="submit" className="w-full">Shorten URL</Button>
+                </form>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <p>Signed in as {session.user?.email}</p>
+                <Button onClick={() => signOut()} variant="outline">Sign Out</Button>
+              </CardFooter>
+            </Card>
 
-        {shortUrl && (
-          <div className="mt-8 flex flex-col items-center">
-            <p className="mb-2">Your shortened URL:</p>
-            <a href={shortUrl} className="text-blue-600 hover:underline mb-4">{shortUrl}</a>
-            <Button onClick={fetchAnalytics} className="w-full max-w-md">View Analytics</Button>
+            {shortUrl && (
+              <Card className="mt-8 bg-gray-800 border-gray-700">
+                <CardHeader>
+                  <CardTitle>Your Shortened URL</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <a href={shortUrl} className="text-blue-400 hover:underline">{shortUrl}</a>
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={fetchAnalytics} className="w-full">View Analytics</Button>
+                </CardFooter>
+              </Card>
+            )}
+
+            {analytics && (
+              <Card className="mt-8 bg-gray-800 border-gray-700">
+                <CardHeader>
+                  <CardTitle>Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p><strong>Total Visits:</strong> {analytics.totalVisits}</p>
+                  <p><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
+                  <h3 className="text-xl font-bold mt-4 mb-2">Recent Visits</h3>
+                  <ul className="space-y-2">
+                    {analytics.recentVisits.map((visit, index) => (
+                      <li key={index} className="text-sm">
+                        {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
           </div>
+        ) : (
+          <Card className="max-w-md mx-auto bg-gray-800 border-gray-700 text-white">
+            <CardHeader>
+              <CardTitle>Get Started</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>Please sign in to use BouncerLink</p>
+              <Button onClick={() => signIn()} className="w-full">Sign In</Button>
+              <Link href="/auth/signup" className="block">
+                <Button variant="outline" className="w-full">Sign Up</Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
 
-        {analytics && (
-          <div className="mt-8 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4 text-black">Analytics</h2>
-            <div className="bg-gray-100 p-4 rounded-lg text-black">
-              <p className="mb-2"><strong>Total Visits:</strong> {analytics.totalVisits}</p>
-              <p className="mb-4"><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
-              <h3 className="text-xl font-bold mb-2">Recent Visits</h3>
-              <ul className="list-disc pl-5">
-                {analytics.recentVisits.map((visit, index) => (
-                  <li key={index} className="mb-1">
-                    {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
-        <Link href="/links" className="mt-8">
-          <Button>View All Links</Button>
-        </Link>
+        <div className="mt-12 text-center">
+          <Link href="/links">
+            <Button variant="outline">View All Links</Button>
+          </Link>
+        </div>
       </main>
     </div>
   )
