@@ -35,6 +35,8 @@ model Link {
   visitLogs            VisitLog[]
   accessCode     String?
   allowedEmails  String[]
+  clickLimit Int?
+  currentClicks Int @default(0)
 }
 
 model VisitLog {

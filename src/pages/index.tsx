@@ -9,8 +9,11 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 
 type Analytics = {
   totalVisits: number;
+  uniqueVisitors: number;
+  clickLimit: number | null;
+  currentClicks: number;
   lastVisited: string | null;
-  recentVisits: { timestamp: string; userAgent: string | null }[];
+  recentVisits: { timestamp: string; userAgent: string | null; ipAddress: string | null }[];
 };
 
 const Home: NextPage = () => {
@@ -22,6 +25,7 @@ const Home: NextPage = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [accessCode, setAccessCode] = useState('')
   const [allowedEmails, setAllowedEmails] = useState('')
+  const [clickLimit, setClickLimit] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +37,8 @@ const Home: NextPage = () => {
         expiresAt: expiresAt || null,
         notificationsEnabled,
         accessCode: accessCode || null,
-        allowedEmails: allowedEmails ? allowedEmails.split(',').map(email => email.trim()) : []
+        allowedEmails: allowedEmails ? allowedEmails.split(',').map(email => email.trim()) : [],
+        clickLimit: clickLimit ? parseInt(clickLimit) : null
       }),
       credentials: 'include',
     })
@@ -106,6 +111,13 @@ const Home: NextPage = () => {
                     placeholder="Allowed Emails (comma-separated, optional)"
                     className="bg-gray-700 border-gray-600 text-white"
                   />
+                  <Input
+                    type="number"
+                    value={clickLimit}
+                    onChange={(e) => setClickLimit(e.target.value)}
+                    placeholder="Click Limit (optional)"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -146,12 +158,15 @@ const Home: NextPage = () => {
                 </CardHeader>
                 <CardContent>
                   <p><strong>Total Visits:</strong> {analytics.totalVisits}</p>
+                  <p><strong>Unique Visitors:</strong> {analytics.uniqueVisitors}</p>
+                  <p><strong>Click Limit:</strong> {analytics.clickLimit || 'No limit'}</p>
+                  <p><strong>Current Clicks:</strong> {analytics.currentClicks}</p>
                   <p><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
                   <h3 className="text-xl font-bold mt-4 mb-2">Recent Visits</h3>
                   <ul className="space-y-2">
                     {analytics.recentVisits.map((visit, index) => (
                       <li key={index} className="text-sm">
-                        {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent}
+                        {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent} ({visit.ipAddress})
                       </li>
                     ))}
                   </ul>

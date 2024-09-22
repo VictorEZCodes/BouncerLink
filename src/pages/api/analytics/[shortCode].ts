@@ -17,7 +17,7 @@ export default async function handler(
       include: {
         visitLogs: {
           orderBy: { timestamp: "desc" },
-          take: 10, // Get the last 10 visits
+          take: 10,
         },
       },
     });
@@ -26,12 +26,22 @@ export default async function handler(
       return res.status(404).json({ message: "Link not found" });
     }
 
+    const uniqueVisitors = await prisma.visitLog.groupBy({
+      by: ["ipAddress", "userAgent"],
+      where: { linkId: link.id },
+      _count: { _all: true },
+    });
+
     const analytics = {
       totalVisits: link.visits,
+      uniqueVisitors: uniqueVisitors.length,
+      clickLimit: link.clickLimit,
+      currentClicks: link.currentClicks,
       lastVisited: link.lastVisitedAt,
       recentVisits: link.visitLogs.map((log) => ({
         timestamp: log.timestamp,
         userAgent: log.userAgent,
+        ipAddress: log.ipAddress,
       })),
     };
 

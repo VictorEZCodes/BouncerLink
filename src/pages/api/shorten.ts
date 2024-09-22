@@ -17,8 +17,14 @@ export default async function handler(
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { url, expiresAt, notificationsEnabled, accessCode, allowedEmails } =
-    req.body;
+  const {
+    url,
+    expiresAt,
+    notificationsEnabled,
+    accessCode,
+    allowedEmails,
+    clickLimit,
+  } = req.body;
 
   if (!url) {
     return res.status(400).json({ message: "URL is required" });
@@ -35,6 +41,7 @@ export default async function handler(
         notificationsEnabled: notificationsEnabled ?? true,
         accessCode: accessCode || null,
         allowedEmails: allowedEmails || [],
+        clickLimit: clickLimit ? parseInt(clickLimit) : null,
         user: {
           connect: { id: session.user.id },
         },
