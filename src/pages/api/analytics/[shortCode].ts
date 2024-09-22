@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "../../../lib/prisma";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Link, VisitLog } from "@prisma/client";
 
 export default async function handler(
   req: NextApiRequest,
@@ -59,13 +59,13 @@ export default async function handler(
           clickLimit: link.clickLimit || "No limit",
           currentClicks: link.currentClicks,
           lastVisited: link.lastVisitedAt || "Never",
-          recentVisits: link.visitLogs.map((log) => ({
+          recentVisits: link.visitLogs.map((log: VisitLog) => ({
             timestamp: log.timestamp,
             userAgent: log.userAgent,
             ipAddress: log.ipAddress,
             email: log.email,
           })),
-          allowedEmails: link.allowedEmails.map((email) => ({
+          allowedEmails: link.allowedEmails.map((email: string) => ({
             email,
             accessed: accessedEmailSet.has(email),
           })),
