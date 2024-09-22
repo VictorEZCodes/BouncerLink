@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../lib/prisma";
+import { sendNotificationEmail } from "../../../lib/sendEmail";
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,6 +15,7 @@ export default async function handler(
   try {
     const link = await prisma.link.findUnique({
       where: { shortCode: shortCode },
+      include: { user: true }, // Include user data to get the email
     });
 
     if (!link) {
@@ -23,6 +25,11 @@ export default async function handler(
     // Check if the link has expired
     if (link.expiresAt && new Date() > new Date(link.expiresAt)) {
       return res.status(410).json({ message: "Link has expired" });
+    }
+
+    // Send notification email if enabled
+    if (link.notificationsEnabled && link.user.email) {
+      await sendNotificationEmail(link.user.email, shortCode);
     }
 
     // Update visit count and last visited time

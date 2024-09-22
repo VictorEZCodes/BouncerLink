@@ -19,13 +19,14 @@ const Home: NextPage = () => {
   const [expiresAt, setExpiresAt] = useState('')
   const [shortUrl, setShortUrl] = useState('')
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const response = await fetch('/api/shorten', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, expiresAt: expiresAt || null }),
+      body: JSON.stringify({ url, expiresAt: expiresAt || null, notificationsEnabled }),
       credentials: 'include',
     })
     const data = await response.json()
@@ -84,6 +85,13 @@ const Home: NextPage = () => {
                     className="bg-gray-700 border-gray-600 text-white"
                   />
                   <Button type="submit" className="w-full">Shorten URL</Button>
+                  <input
+                    type="checkbox"
+                    id="notificationsEnabled"
+                    checked={notificationsEnabled}
+                    onChange={(e) => setNotificationsEnabled(e.target.checked)}
+                  />
+                  <label htmlFor="notificationsEnabled">Enable email notifications</label>
                 </form>
               </CardContent>
               <CardFooter className="flex justify-between">
@@ -139,15 +147,16 @@ const Home: NextPage = () => {
               </Link>
             </CardContent>
           </Card>
-        )}
+        )
+        }
 
         <div className="mt-12 text-center">
           <Link href="/links">
             <Button variant="outline">View All Links</Button>
           </Link>
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   )
 }
 

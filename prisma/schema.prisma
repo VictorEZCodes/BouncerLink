@@ -20,18 +20,19 @@ model User {
 }
 
 model Link {
-  id            String    @id @default(cuid())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  url           String
-  originalUrl   String
-  shortCode     String    @unique
-  visits        Int       @default(0)
-  lastVisitedAt DateTime?
-  expiresAt     DateTime?
-  userId        String?
-  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  visitLogs     VisitLog[]
+  id                   String    @id @default(cuid())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  url                  String
+  originalUrl          String
+  shortCode            String    @unique
+  visits               Int       @default(0)
+  lastVisitedAt        DateTime?
+  expiresAt            DateTime?
+  notificationsEnabled Boolean   @default(true)
+  userId               String?
+  user                 User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  visitLogs            VisitLog[]
 }
 
 model VisitLog {

@@ -17,7 +17,7 @@ export default async function handler(
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { url, expiresAt } = req.body;
+  const { url, expiresAt, notificationsEnabled } = req.body;
 
   if (!url) {
     return res.status(400).json({ message: "URL is required" });
@@ -27,15 +27,18 @@ export default async function handler(
     const shortCode = nanoid(8);
     const newLink = await prisma.link.create({
       data: {
-        url: url,
+        url,
         originalUrl: url,
-        shortCode: shortCode,
-        userId: session.user.id,
+        shortCode,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
+        notificationsEnabled: notificationsEnabled ?? true,
+        user: {
+          connect: { id: session.user.id },
+        },
       },
     });
 
-    console.log("New link created:", newLink); // Add this line
+    console.log("New link created:", newLink);
 
     return res.status(200).json({
       shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/r/${shortCode}`,
