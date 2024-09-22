@@ -31,6 +31,11 @@ export default async function handler(
     const shortCode = nanoid(8);
     let newLink;
 
+    // Convert expiresAt to UTC Date object
+    const expirationDate = expiresAt
+      ? new Date(new Date(expiresAt).toUTCString())
+      : null;
+
     if (session) {
       // User is authenticated, create a full link
       newLink = await prisma.link.create({
@@ -38,7 +43,7 @@ export default async function handler(
           url,
           originalUrl: url,
           shortCode,
-          expiresAt: expiresAt ? new Date(expiresAt) : null,
+          expiresAt: expirationDate,
           notificationsEnabled: notificationsEnabled ?? true,
           accessCode: accessCode || null,
           allowedEmails: allowedEmails || [],
@@ -56,7 +61,9 @@ export default async function handler(
           url,
           originalUrl: url,
           shortCode,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
+          expiresAt: new Date(
+            new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString()
+          ), // Expires in 24 hours, in UTC
           notificationsEnabled: false,
           accessCode: null,
           allowedEmails: [],
@@ -71,6 +78,7 @@ export default async function handler(
     }
 
     console.log("New link created:", newLink);
+    console.log("Expiration date:", newLink.expiresAt?.toUTCString());
 
     return res.status(200).json({
       shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/${shortCode}`,

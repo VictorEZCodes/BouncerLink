@@ -27,6 +27,12 @@ const Home: NextPage = () => {
   const [allowedEmails, setAllowedEmails] = useState('')
   const [clickLimit, setClickLimit] = useState('')
 
+  const formatDate = (date: string | null | undefined) => {
+    if (!date) return 'Never';
+    const formattedDate = new Date(date);
+    return isNaN(formattedDate.getTime()) ? 'Invalid Date' : formattedDate.toLocaleString();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const emailList = allowedEmails ? allowedEmails.split(',').map(email => email.trim()) : [];
@@ -187,7 +193,8 @@ const Home: NextPage = () => {
                     <p><strong>Unique Visitors:</strong> {analytics.uniqueVisitors}</p>
                     <p><strong>Click Limit:</strong> {analytics.clickLimit || 'No limit'}</p>
                     <p><strong>Current Clicks:</strong> {analytics.currentClicks}</p>
-                    <p><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
+                    <p><strong>Last Visited:</strong> {formatDate(analytics.lastVisited)}</p>
+                    {/* <p><strong>Expires At:</strong> {formatDate(link.expiresAt)}</p> */}
                     <h3 className="text-xl font-bold mt-4 mb-2">Recent Visits</h3>
                     <ul className="space-y-2">
                       {analytics.recentVisits.map((visit, index) => (

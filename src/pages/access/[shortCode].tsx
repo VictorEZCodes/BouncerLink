@@ -92,12 +92,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const link = await prisma.link.findUnique({
       where: { shortCode },
-      select: { accessCode: true, allowedEmails: true },
+      select: { accessCode: true, allowedEmails: true, expiresAt: true },
     });
 
     if (!link) {
+      return { notFound: true };
+    }
+
+    if (link.expiresAt && new Date() > new Date(link.expiresAt)) {
       return {
-        notFound: true,
+        props: {
+          error: "This link has expired",
+          requiresAccessCode: false,
+          requiresEmail: false,
+        },
       };
     }
 

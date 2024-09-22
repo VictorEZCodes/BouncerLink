@@ -24,8 +24,15 @@ export default async function handler(
     }
 
     // Check if the link has expired
-    if (link.expiresAt && new Date() > new Date(link.expiresAt)) {
-      return res.status(410).json({ error: "Link has expired" });
+    if (link.expiresAt) {
+      const now = new Date();
+      console.log("Current time (UTC):", now.toUTCString());
+      console.log("Link expiration time (UTC):", link.expiresAt.toUTCString());
+
+      if (now > link.expiresAt) {
+        console.log("Link has expired");
+        return res.status(410).json({ error: "Link has expired" });
+      }
     }
 
     // Check if click limit has been reached
