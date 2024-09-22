@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "../../../lib/prisma";
 import { PrismaClient } from "@prisma/client";
-import { VisitLog } from "@prisma/client";
 
 export default async function handler(
   req: NextApiRequest,
@@ -51,7 +50,7 @@ export default async function handler(
         });
 
         const accessedEmailSet = new Set(
-          accessedEmails.map((log: VisitLog) => log.email)
+          accessedEmails.map((log: { email: string | null }) => log.email)
         );
 
         return {
