@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
-import { prisma } from "../../lib/prisma"; // Change this to use the singleton instance
+import { prisma } from "../../lib/prisma";
 import { nanoid } from "nanoid";
 
 export default async function handler(
@@ -9,9 +9,6 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -32,22 +29,42 @@ export default async function handler(
 
   try {
     const shortCode = nanoid(8);
-    const newLink = await prisma.link.create({
-      data: {
-        url,
-        originalUrl: url,
-        shortCode,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
-        notificationsEnabled: notificationsEnabled ?? true,
-        accessCode: accessCode || null,
-        allowedEmails: allowedEmails || [],
-        associatedEmails: allowedEmails || [], // Use allowedEmails for associatedEmails as well
-        clickLimit: clickLimit ? parseInt(clickLimit) : null,
-        user: {
-          connect: { id: session.user.id },
+    let newLink;
+
+    if (session) {
+      // User is authenticated, create a full link
+      newLink = await prisma.link.create({
+        data: {
+          url,
+          originalUrl: url,
+          shortCode,
+          expiresAt: expiresAt ? new Date(expiresAt) : null,
+          notificationsEnabled: notificationsEnabled ?? true,
+          accessCode: accessCode || null,
+          allowedEmails: allowedEmails || [],
+          associatedEmails: allowedEmails || [],
+          clickLimit: clickLimit ? parseInt(clickLimit) : null,
+          user: {
+            connect: { id: session.user.id },
+          },
         },
-      },
-    });
+      });
+    } else {
+      // User is not authenticated, create a temporary link
+      newLink = await prisma.link.create({
+        data: {
+          url,
+          originalUrl: url,
+          shortCode,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
+          notificationsEnabled: false,
+          accessCode: null,
+          allowedEmails: [],
+          associatedEmails: [],
+          clickLimit: null,
+        },
+      });
+    }
 
     if (!newLink) {
       throw new Error("Failed to create link");
@@ -59,6 +76,7 @@ export default async function handler(
       shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/${shortCode}`,
       shortCode,
       expiresAt: newLink.expiresAt,
+      isAuthenticated: !!session,
     });
   } catch (error) {
     console.error("Error creating short link:", error);

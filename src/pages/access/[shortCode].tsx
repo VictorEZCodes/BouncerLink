@@ -21,7 +21,7 @@ export default function AccessPage({ requiresAccessCode, requiresEmail, error: s
     setError('');
 
     try {
-      const response = await fetch(`/api/r/${shortCode}`, {
+      const response = await fetch(`/api/${shortCode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accessCode, email }),

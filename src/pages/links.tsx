@@ -87,6 +87,14 @@ const LinksPage = () => {
     return expirationDate.toLocaleString();
   }
 
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <p className="text-center text-2xl">Please sign in to view your links.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Head>
@@ -97,88 +105,82 @@ const LinksPage = () => {
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-8 text-center">My Shortened Links</h1>
 
-        {session ? (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full table-auto">
-                <thead>
-                  <tr className="bg-gray-800 text-gray-300 uppercase text-sm leading-normal">
-                    <th className="py-3 px-6 text-left">Short Code</th>
-                    <th className="py-3 px-6 text-left">Original URL</th>
-                    <th className="py-3 px-6 text-center">Visits</th>
-                    <th className="py-3 px-6 text-center">Expires At</th>
-                    <th className="py-3 px-6 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-gray-300 text-sm font-light">
-                  {links.map((link) => (
-                    <tr key={link.id} className="border-b border-gray-700 hover:bg-gray-800">
-                      <td className="py-3 px-6 text-left whitespace-nowrap">
-                        <a href={`${process.env.NEXT_PUBLIC_BASE_URL}/api/r/${link.shortCode}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                          {link.shortCode}
-                        </a>
-                      </td>
-                      <td className="py-3 px-6 text-left">
-                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                          {truncateUrl(link.url)}
-                        </a>
-                      </td>
-                      <td className="py-3 px-6 text-center">{link.visits}</td>
-                      <td className="py-3 px-6 text-center">
-                        {formatExpirationDate(link.expiresAt)}
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        <Button onClick={() => fetchAnalytics(link.shortCode)}>View Analytics</Button>
-                      </td>
-                    </tr>
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto">
+            <thead>
+              <tr className="bg-gray-800 text-gray-300 uppercase text-sm leading-normal">
+                <th className="py-3 px-6 text-left">Short Code</th>
+                <th className="py-3 px-6 text-left">Original URL</th>
+                <th className="py-3 px-6 text-center">Visits</th>
+                <th className="py-3 px-6 text-center">Expires At</th>
+                <th className="py-3 px-6 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-300 text-sm font-light">
+              {links.map((link) => (
+                <tr key={link.id} className="border-b border-gray-700 hover:bg-gray-800">
+                  <td className="py-3 px-6 text-left whitespace-nowrap">
+                    <a href={`${process.env.NEXT_PUBLIC_BASE_URL}/${link.shortCode}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                      {link.shortCode}
+                    </a>
+                  </td>
+                  <td className="py-3 px-6 text-left">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                      {truncateUrl(link.url)}
+                    </a>
+                  </td>
+                  <td className="py-3 px-6 text-center">{link.visits}</td>
+                  <td className="py-3 px-6 text-center">
+                    {formatExpirationDate(link.expiresAt)}
+                  </td>
+                  <td className="py-3 px-6 text-center">
+                    <Button onClick={() => fetchAnalytics(link.shortCode)}>View Analytics</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {selectedLink && analytics && (
+          <Card className="mt-8 bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle>Analytics for {selectedLink}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p><strong>Total Visits:</strong> {analytics.totalVisits}</p>
+              <p><strong>Unique Visitors:</strong> {analytics.uniqueVisitors}</p>
+              <p><strong>Click Limit:</strong> {analytics.clickLimit}</p>
+              <p><strong>Current Clicks:</strong> {analytics.currentClicks}</p>
+              <p><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
+
+              <h3 className="text-xl font-bold mt-4 mb-2">Recent Visits</h3>
+              {analytics.recentVisits && analytics.recentVisits.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {analytics.recentVisits.map((visit, index) => (
+                    <li key={index}>
+                      {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent}
+                    </li>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </ul>
+              ) : (
+                <p>No recent visits</p>
+              )}
 
-            {selectedLink && analytics && (
-              <Card className="mt-8 bg-gray-800 border-gray-700">
-                <CardHeader>
-                  <CardTitle>Analytics for {selectedLink}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p><strong>Total Visits:</strong> {analytics.totalVisits}</p>
-                  <p><strong>Unique Visitors:</strong> {analytics.uniqueVisitors}</p>
-                  <p><strong>Click Limit:</strong> {analytics.clickLimit}</p>
-                  <p><strong>Current Clicks:</strong> {analytics.currentClicks}</p>
-                  <p><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
-
-                  <h3 className="text-xl font-bold mt-4 mb-2">Recent Visits</h3>
-                  {analytics.recentVisits && analytics.recentVisits.length > 0 ? (
-                    <ul className="list-disc pl-5">
-                      {analytics.recentVisits.map((visit, index) => (
-                        <li key={index}>
-                          {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No recent visits</p>
-                  )}
-
-                  <h3 className="text-xl font-bold mt-4 mb-2">Allowed Emails</h3>
-                  {analytics.allowedEmails && analytics.allowedEmails.length > 0 ? (
-                    <ul className="list-disc pl-5">
-                      {analytics.allowedEmails.map((emailObj, index) => (
-                        <li key={index}>
-                          {emailObj.email} - {emailObj.accessed ? 'Accessed' : 'Not Accessed'}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No allowed emails</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </>
-        ) : (
-          <p className="text-center">Please sign in to view your links.</p>
+              <h3 className="text-xl font-bold mt-4 mb-2">Allowed Emails</h3>
+              {analytics.allowedEmails && analytics.allowedEmails.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {analytics.allowedEmails.map((emailObj, index) => (
+                    <li key={index}>
+                      {emailObj.email} - {emailObj.accessed ? 'Accessed' : 'Not Accessed'}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No allowed emails</p>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         <div className="mt-8 text-center">
