@@ -17,9 +17,21 @@ type Link = {
 
 type Analytics = {
   totalVisits: number;
+  uniqueVisitors: number;
+  clickLimit: number | string;
+  currentClicks: number;
   lastVisited: string | null;
-  recentVisits: { timestamp: string; userAgent: string | null }[];
-}
+  recentVisits: Array<{
+    timestamp: string;
+    userAgent: string;
+    ipAddress: string;
+    email: string | null;
+  }>;
+  allowedEmails: Array<{
+    email: string;
+    accessed: boolean;
+  }>;
+};
 
 const LinksPage = () => {
   const { data: session } = useSession()
@@ -40,7 +52,6 @@ const LinksPage = () => {
         throw new Error('Failed to fetch links')
       }
       const data = await response.json()
-      console.log('Fetched links:', data) // Add this line
       setLinks(data)
     } catch (error) {
       console.error('Error fetching links:', error)
@@ -131,16 +142,37 @@ const LinksPage = () => {
                   <CardTitle>Analytics for {selectedLink}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="mb-2"><strong>Total Visits:</strong> {analytics.totalVisits}</p>
-                  <p className="mb-4"><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
-                  <h3 className="text-xl font-bold mb-2">Recent Visits</h3>
-                  <ul className="list-disc pl-5">
-                    {analytics.recentVisits.map((visit, index) => (
-                      <li key={index} className="mb-1">
-                        {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent}
-                      </li>
-                    ))}
-                  </ul>
+                  <p><strong>Total Visits:</strong> {analytics.totalVisits}</p>
+                  <p><strong>Unique Visitors:</strong> {analytics.uniqueVisitors}</p>
+                  <p><strong>Click Limit:</strong> {analytics.clickLimit}</p>
+                  <p><strong>Current Clicks:</strong> {analytics.currentClicks}</p>
+                  <p><strong>Last Visited:</strong> {analytics.lastVisited ? new Date(analytics.lastVisited).toLocaleString() : 'Never'}</p>
+
+                  <h3 className="text-xl font-bold mt-4 mb-2">Recent Visits</h3>
+                  {analytics.recentVisits && analytics.recentVisits.length > 0 ? (
+                    <ul className="list-disc pl-5">
+                      {analytics.recentVisits.map((visit, index) => (
+                        <li key={index}>
+                          {new Date(visit.timestamp).toLocaleString()} - {visit.userAgent}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No recent visits</p>
+                  )}
+
+                  <h3 className="text-xl font-bold mt-4 mb-2">Allowed Emails</h3>
+                  {analytics.allowedEmails && analytics.allowedEmails.length > 0 ? (
+                    <ul className="list-disc pl-5">
+                      {analytics.allowedEmails.map((emailObj, index) => (
+                        <li key={index}>
+                          {emailObj.email} - {emailObj.accessed ? 'Accessed' : 'Not Accessed'}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No allowed emails</p>
+                  )}
                 </CardContent>
               </Card>
             )}

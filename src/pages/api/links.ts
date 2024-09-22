@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
-import prisma from "../../lib/prisma";
+import { prisma } from "../../lib/prisma";
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,14 +27,44 @@ export default async function handler(
           visits: true,
           createdAt: true,
           lastVisitedAt: true,
-          expiresAt: true, // Make sure this line is included
+          expiresAt: true,
+          clickLimit: true,
+          currentClicks: true,
+          allowedEmails: true,
+          associatedEmails: true,
+          visitLogs: {
+            orderBy: { timestamp: "desc" },
+            take: 10,
+            select: {
+              timestamp: true,
+              userAgent: true,
+              ipAddress: true,
+              email: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
         },
       });
 
-      return res.status(200).json(links);
+      const linksWithAnalytics = links.map((link) => ({
+        ...link,
+        analytics: {
+          totalVisits: link.visits,
+          uniqueVisitors: new Set(
+            link.visitLogs.map((log) => log.email).filter(Boolean)
+          ).size,
+          clickLimit: link.clickLimit || "No limit",
+          currentClicks: link.currentClicks,
+          lastVisited: link.lastVisitedAt || "Never",
+          recentVisits: link.visitLogs,
+          allowedEmails: link.allowedEmails,
+          associatedEmails: link.associatedEmails,
+        },
+      }));
+
+      return res.status(200).json(linksWithAnalytics);
     } catch (error) {
       console.error("Error fetching links:", error);
       return res.status(500).json({ error: "Error fetching links" });

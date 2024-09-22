@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
-import prisma from "../../lib/prisma";
+import { prisma } from "../../lib/prisma"; // Change this to use the singleton instance
 import { nanoid } from "nanoid";
 
 export default async function handler(
@@ -10,11 +10,11 @@ export default async function handler(
 ) {
   const session = await getServerSession(req, res, authOptions);
   if (!session) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   const {
@@ -27,7 +27,7 @@ export default async function handler(
   } = req.body;
 
   if (!url) {
-    return res.status(400).json({ message: "URL is required" });
+    return res.status(400).json({ error: "URL is required" });
   }
 
   try {
@@ -41,12 +41,17 @@ export default async function handler(
         notificationsEnabled: notificationsEnabled ?? true,
         accessCode: accessCode || null,
         allowedEmails: allowedEmails || [],
+        associatedEmails: allowedEmails || [], // Use allowedEmails for associatedEmails as well
         clickLimit: clickLimit ? parseInt(clickLimit) : null,
         user: {
           connect: { id: session.user.id },
         },
       },
     });
+
+    if (!newLink) {
+      throw new Error("Failed to create link");
+    }
 
     console.log("New link created:", newLink);
 
@@ -57,6 +62,8 @@ export default async function handler(
     });
   } catch (error) {
     console.error("Error creating short link:", error);
-    return res.status(500).json({ message: "Error creating short link" });
+    return res.status(500).json({ error: "Error creating short link" });
+  } finally {
+    await prisma.$disconnect();
   }
 }

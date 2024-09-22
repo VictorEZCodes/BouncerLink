@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
-import prisma from '../../lib/prisma';
+import { prisma } from '../../lib/prisma'; // Updated import
 
 interface AccessPageProps {
   requiresAccessCode: boolean;
   requiresEmail: boolean;
+  error?: string; // Added error prop
 }
 
-export default function AccessPage({ requiresAccessCode, requiresEmail }: AccessPageProps) {
+export default function AccessPage({ requiresAccessCode, requiresEmail, error: serverError }: AccessPageProps) {
   const [accessCode, setAccessCode] = useState('');
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(serverError || '');
   const router = useRouter();
   const { shortCode } = router.query;
 
@@ -35,7 +36,7 @@ export default function AccessPage({ requiresAccessCode, requiresEmail }: Access
         }
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Access denied');
+        setError(errorData.error || 'Access denied');
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -88,21 +89,34 @@ export default function AccessPage({ requiresAccessCode, requiresEmail }: Access
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { shortCode } = context.params as { shortCode: string };
 
-  const link = await prisma.link.findUnique({
-    where: { shortCode },
-    select: { accessCode: true, allowedEmails: true },
-  });
+  try {
+    const link = await prisma.link.findUnique({
+      where: { shortCode },
+      select: { accessCode: true, allowedEmails: true },
+    });
 
-  if (!link) {
+    if (!link) {
+      return {
+        notFound: true,
+      };
+    }
+
     return {
-      notFound: true,
+      props: {
+        requiresAccessCode: !!link.accessCode,
+        requiresEmail: link.allowedEmails.length > 0,
+      },
     };
+  } catch (error) {
+    console.error('Error fetching link:', error);
+    return {
+      props: {
+        requiresAccessCode: false,
+        requiresEmail: false,
+        error: 'An error occurred while fetching the link',
+      },
+    };
+  } finally {
+    await prisma.$disconnect();
   }
-
-  return {
-    props: {
-      requiresAccessCode: !!link.accessCode,
-      requiresEmail: link.allowedEmails.length > 0,
-    },
-  };
 };

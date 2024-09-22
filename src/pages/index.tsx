@@ -29,6 +29,7 @@ const Home: NextPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const emailList = allowedEmails ? allowedEmails.split(',').map(email => email.trim()) : [];
     const response = await fetch('/api/shorten', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -37,8 +38,8 @@ const Home: NextPage = () => {
         expiresAt: expiresAt || null,
         notificationsEnabled,
         accessCode: accessCode || null,
-        allowedEmails: allowedEmails ? allowedEmails.split(',').map(email => email.trim()) : [],
-        clickLimit: clickLimit ? parseInt(clickLimit) : null
+        allowedEmails: emailList,
+        clickLimit: clickLimit ? parseInt(clickLimit) : null,
       }),
       credentials: 'include',
     })
@@ -56,6 +57,7 @@ const Home: NextPage = () => {
         throw new Error('Failed to fetch analytics');
       }
       const data = await response.json();
+      console.log("Received analytics data:", data);
       setAnalytics(data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -170,6 +172,18 @@ const Home: NextPage = () => {
                       </li>
                     ))}
                   </ul>
+                  <h3 className="text-xl font-bold mt-4 mb-2">Associated/Allowed Emails</h3>
+                  {analytics.allowedEmails && analytics.allowedEmails.length > 0 ? (
+                    <ul className="list-disc pl-5">
+                      {analytics.allowedEmails.map((item, index) => (
+                        <li key={index}>
+                          {item.email} {item.accessed ? "(Accessed)" : "(Not accessed yet)"}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No associated/allowed emails</p>
+                  )}
                 </CardContent>
               </Card>
             )}
