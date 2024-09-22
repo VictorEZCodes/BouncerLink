@@ -38,21 +38,25 @@ const LinksPage = () => {
   const [links, setLinks] = useState<Link[]>([])
   const [selectedLink, setSelectedLink] = useState<string | null>(null)
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const linksPerPage = 10
 
   useEffect(() => {
     if (session) {
-      fetchLinks()
+      fetchLinks(currentPage)
     }
-  }, [session])
+  }, [session, currentPage])
 
-  const fetchLinks = async () => {
+  const fetchLinks = async (page: number) => {
     try {
-      const response = await fetch('/api/links')
+      const response = await fetch(`/api/links?page=${page}&limit=${linksPerPage}`)
       if (!response.ok) {
         throw new Error('Failed to fetch links')
       }
       const data = await response.json()
-      setLinks(data)
+      setLinks(data.links)
+      setTotalPages(Math.ceil(data.total / linksPerPage))
     } catch (error) {
       console.error('Error fetching links:', error)
     }
@@ -69,6 +73,18 @@ const LinksPage = () => {
       setSelectedLink(shortCode)
     } catch (error) {
       console.error('Error fetching analytics:', error)
+    }
+  }
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
     }
   }
 
@@ -141,6 +157,24 @@ const LinksPage = () => {
             </tbody>
           </table>
         </div>
+
+        {links.length > 0 && (
+          <div className="mt-4 flex justify-between">
+            <Button
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <Button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        )}
 
         {selectedLink && analytics && (
           <Card className="mt-8 bg-gray-800 border-gray-700">
