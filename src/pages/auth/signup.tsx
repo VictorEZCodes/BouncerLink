@@ -7,20 +7,25 @@ export default function SignUp() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
     })
+
+    const data = await response.json()
+
     if (response.ok) {
       router.push('/auth/signin')
     } else {
-      // Handle error (e.g., show error message)
-      console.error('Sign up failed')
+      setError(data.message || 'Sign up failed')
     }
   }
 
@@ -52,6 +57,7 @@ export default function SignUp() {
           required
           className="mb-4"
         />
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <Button type="submit" className="w-full">Sign Up</Button>
       </form>
     </div>

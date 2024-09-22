@@ -7,20 +7,23 @@ import { Input } from "@/components/ui/input"
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+
     const result = await signIn('credentials', {
       redirect: false,
       email,
       password,
     })
+
     if (result?.error) {
-      // Handle error (e.g., show error message)
-      console.error(result.error)
-    } else {
-      router.push('/')
+      setError(result.error)
+    } else if (result?.ok) {
+      router.push('/') // Redirect to the home page after successful login
     }
   }
 
@@ -44,6 +47,7 @@ export default function SignIn() {
           required
           className="mb-4"
         />
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <Button type="submit" className="w-full">Sign In</Button>
       </form>
     </div>

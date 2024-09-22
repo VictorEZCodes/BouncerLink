@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import prisma from "../../../lib/prisma";
+import { prisma } from "../../../lib/prisma";
 import bcrypt from "bcrypt";
 
 export default async function handler(
@@ -11,6 +11,10 @@ export default async function handler(
   }
 
   const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
