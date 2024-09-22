@@ -56,7 +56,7 @@ export default async function handler(
     console.log("New link created:", newLink);
 
     return res.status(200).json({
-      shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/r/${shortCode}`,
+      shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/${shortCode}`,
       shortCode,
       expiresAt: newLink.expiresAt,
     });
