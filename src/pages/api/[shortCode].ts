@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "../../../lib/prisma";
-import { sendNotificationEmail } from "../../../lib/sendEmail";
+import { prisma } from "../../lib/prisma";
+import { sendNotificationEmail } from "../../lib/sendEmail";
 
 export default async function handler(
   req: NextApiRequest,
