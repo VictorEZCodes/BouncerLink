@@ -26,6 +26,7 @@ const Home: NextPage = () => {
   const [accessCode, setAccessCode] = useState('')
   const [allowedEmails, setAllowedEmails] = useState('')
   const [clickLimit, setClickLimit] = useState('')
+  const [customShortCode, setCustomShortCode] = useState('');
 
   const formatDate = (date: string | null | undefined) => {
     if (!date) return 'Never';
@@ -46,6 +47,7 @@ const Home: NextPage = () => {
         accessCode: accessCode || null,
         allowedEmails: emailList,
         clickLimit: clickLimit ? parseInt(clickLimit) : null,
+        customShortCode: customShortCode || null,
       }),
       credentials: 'include',
     })
@@ -155,6 +157,13 @@ const Home: NextPage = () => {
                       value={clickLimit}
                       onChange={(e) => setClickLimit(e.target.value)}
                       placeholder="Click Limit (optional)"
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                    <Input
+                      type="text"
+                      value={customShortCode}
+                      onChange={(e) => setCustomShortCode(e.target.value)}
+                      placeholder="Custom short code (optional)"
                       className="bg-gray-700 border-gray-600 text-white"
                     />
                     <div className="flex items-center space-x-2">

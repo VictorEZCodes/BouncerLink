@@ -21,6 +21,7 @@ export default async function handler(
     accessCode,
     allowedEmails,
     clickLimit,
+    customShortCode,
   } = req.body;
 
   if (!url) {
@@ -28,13 +29,30 @@ export default async function handler(
   }
 
   try {
-    const shortCode = nanoid(8);
-    let newLink;
+    let shortCode = customShortCode;
+
+    if (shortCode) {
+      // Check if the custom short code is already in use
+      const existingLink = await prisma.link.findUnique({
+        where: { shortCode },
+      });
+
+      if (existingLink) {
+        return res
+          .status(400)
+          .json({ error: "Custom short code is already in use" });
+      }
+    } else {
+      // Generate a random short code if no custom code is provided
+      shortCode = nanoid(8);
+    }
 
     // Convert expiresAt to UTC Date object
     const expirationDate = expiresAt
       ? new Date(new Date(expiresAt).toUTCString())
       : null;
+
+    let newLink;
 
     if (session) {
       // User is authenticated, create a full link
