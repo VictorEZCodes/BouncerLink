@@ -33,6 +33,8 @@ model Link {
   userId               String?
   user                 User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   visitLogs            VisitLog[]
+  accessCode     String?
+  allowedEmails  String[]
 }
 
 model VisitLog {

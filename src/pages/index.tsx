@@ -20,13 +20,21 @@ const Home: NextPage = () => {
   const [shortUrl, setShortUrl] = useState('')
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const [accessCode, setAccessCode] = useState('')
+  const [allowedEmails, setAllowedEmails] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const response = await fetch('/api/shorten', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, expiresAt: expiresAt || null, notificationsEnabled }),
+      body: JSON.stringify({
+        url,
+        expiresAt: expiresAt || null,
+        notificationsEnabled,
+        accessCode: accessCode || null,
+        allowedEmails: allowedEmails ? allowedEmails.split(',').map(email => email.trim()) : []
+      }),
       credentials: 'include',
     })
     const data = await response.json()
@@ -84,14 +92,31 @@ const Home: NextPage = () => {
                     onChange={(e) => setExpiresAt(e.target.value)}
                     className="bg-gray-700 border-gray-600 text-white"
                   />
-                  <Button type="submit" className="w-full">Shorten URL</Button>
-                  <input
-                    type="checkbox"
-                    id="notificationsEnabled"
-                    checked={notificationsEnabled}
-                    onChange={(e) => setNotificationsEnabled(e.target.checked)}
+                  <Input
+                    type="text"
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value)}
+                    placeholder="Access Code (optional)"
+                    className="bg-gray-700 border-gray-600 text-white"
                   />
-                  <label htmlFor="notificationsEnabled">Enable email notifications</label>
+                  <Input
+                    type="text"
+                    value={allowedEmails}
+                    onChange={(e) => setAllowedEmails(e.target.value)}
+                    placeholder="Allowed Emails (comma-separated, optional)"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="notificationsEnabled"
+                      checked={notificationsEnabled}
+                      onChange={(e) => setNotificationsEnabled(e.target.checked)}
+                      className="bg-gray-700 border-gray-600"
+                    />
+                    <label htmlFor="notificationsEnabled">Enable email notifications</label>
+                  </div>
+                  <Button type="submit" className="w-full">Shorten URL</Button>
                 </form>
               </CardContent>
               <CardFooter className="flex justify-between">
