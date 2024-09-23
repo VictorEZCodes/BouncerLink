@@ -36,12 +36,19 @@ const Home: NextPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Ensure the URL has the correct protocol
+    let formattedUrl = url
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://' + formattedUrl
+    }
+
     const emailList = allowedEmails ? allowedEmails.split(',').map(email => email.trim()) : [];
     const response = await fetch('/api/shorten', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        url,
+        url: formattedUrl,
         expiresAt: expiresAt || null,
         notificationsEnabled,
         accessCode: accessCode || null,
@@ -93,7 +100,7 @@ const Home: NextPage = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
-                  type="url"
+                  type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Enter your URL here"
