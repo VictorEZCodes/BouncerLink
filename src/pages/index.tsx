@@ -26,7 +26,8 @@ const Home: NextPage = () => {
   const [accessCode, setAccessCode] = useState('')
   const [allowedEmails, setAllowedEmails] = useState('')
   const [clickLimit, setClickLimit] = useState('')
-  const [customShortCode, setCustomShortCode] = useState('');
+  const [customShortCode, setCustomShortCode] = useState('')
+  const [copyButtonText, setCopyButtonText] = useState('Copy')
 
   const formatDate = (date: string | null | undefined) => {
     if (!date) return 'Never';
@@ -61,6 +62,7 @@ const Home: NextPage = () => {
     const data = await response.json()
     setShortUrl(data.shortUrl)
     setAnalytics(null)
+    setCopyButtonText('Copy') // Reset copy button text
   }
 
   const fetchAnalytics = async () => {
@@ -77,6 +79,14 @@ const Home: NextPage = () => {
     } catch (error) {
       console.error('Error fetching analytics:', error);
       setAnalytics(null);
+    }
+  }
+
+  const handleCopy = () => {
+    if (shortUrl) {
+      navigator.clipboard.writeText(shortUrl)
+      setCopyButtonText('Copied!')
+      setTimeout(() => setCopyButtonText('Copy'), 2000) // Reset after 2 seconds
     }
   }
 
@@ -117,8 +127,9 @@ const Home: NextPage = () => {
               <CardHeader>
                 <CardTitle>Your Shortened URL</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex items-center space-x-4">
                 <a href={shortUrl} className="text-blue-400 hover:underline">{shortUrl}</a>
+                <Button onClick={handleCopy}>{copyButtonText}</Button>
               </CardContent>
               {!session && (
                 <div className="absolute inset-0 bg-gray-900 bg-opacity-75 flex flex-col items-center justify-center">
